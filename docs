@@ -1,0 +1,19 @@
+-- Table for storing cashback records per user
+create table if not exists public.cashback_records (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  merchant_name text not null,
+  order_amount numeric(10, 2),
+  cashback_amount numeric(10, 2),
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+-- Enable Row Level Security
+alter table public.cashback_records enable row level security;
+
+-- Policy: each user can select only their own rows
+create policy "Users can view their own cashback"
+  on public.cashback_records
+  for select
+  using (auth.uid() = user_id);
